@@ -25,7 +25,7 @@ namespace Seriallab
 {
     public partial class MainForm : Form
     {
-        public string data{ get; set; }
+        public string data { get; set; }
         int graph_scaler = 500;
         int send_repeat_counter = 0;
         bool send_data_flag = false;
@@ -41,7 +41,7 @@ namespace Seriallab
 
         public void configrations()
         {
-           portConfig.Items.AddRange(SerialPort.GetPortNames());
+            portConfig.Items.AddRange(SerialPort.GetPortNames());
             baudrateConfig.DataSource = new[] { "115200", "19200", "230400", "57600", "38400", "9600", "4800" };
             parityConfig.DataSource = new[] { "None", "Odd", "Even", "Mark", "Space" };
             databitsConfig.DataSource = new[] { "5", "6", "7", "8" };
@@ -58,6 +58,7 @@ namespace Seriallab
             mySerial.DataReceived += rx_data_event;
             tx_repeater_delay.Tick += new EventHandler(send_data);
             backgroundWorker1.DoWork += new DoWorkEventHandler(update_rxtextarea_event);
+            backgroundWorker2.DoWork += new DoWorkEventHandler(plotData);
             tabControl1.Selected += new TabControlEventHandler(tabControl1_Selecting);
 
             for (int i = 0; i < 5 && i < 5; i++)
@@ -115,7 +116,7 @@ namespace Seriallab
                     try { out_file.Dispose(); }
                     catch {/*ignore*/ }
 
-                try {in_file.Dispose();}
+                try { in_file.Dispose(); }
                 catch {/*ignore*/ }
 
                 UserControl_state(false);
@@ -143,9 +144,9 @@ namespace Seriallab
                         catch { alert("Can't write to " + datalogger_checkbox.Text + " file it might be not exist or it is opennd in another program"); return; }
                     }
 
-
                     this.BeginInvoke((Action)(() =>
                     {
+
                         data = System.Text.Encoding.Default.GetString(dataRecevied);
 
                         if (!plotter_flag && !backgroundWorker1.IsBusy)
@@ -155,26 +156,44 @@ namespace Seriallab
 
                             backgroundWorker1.RunWorkerAsync();
                         }
-
-                        else if (plotter_flag)
+                        else if (plotter_flag && !backgroundWorker2.IsBusy)
                         {
-                            double number;
-                            string[] variables = data.Split('\n')[0].Split(',');
-                            for (int i = 0; i < variables.Length && i < 5; i++)
-                            {
-                                if (double.TryParse(variables[i], out number))
-                                {
-                                    if (graph.Series[i].Points.Count > graph_scaler)
-                                        graph.Series[i].Points.RemoveAt(0);
-                                    graph.Series[i].Points.Add(number);
-                                }
-                            }
-                            graph.ResetAutoValues();
+                            backgroundWorker2.RunWorkerAsync(argument: data);
                         }
                     }));
+
                 }
                 catch { alert("Can't read form  " + mySerial.PortName + " port it might be opennd in another program"); }
             }
+        }
+
+        private void plotData(object sender, DoWorkEventArgs e)
+        {
+            String data = (String)e.Argument;
+
+            this.BeginInvoke((Action)(() =>
+            {
+                double number;
+                string[] datalines = data.Split('\n');
+                for (int j = 0; j < datalines.Length; j++)
+                {
+                    string[] variables = datalines[j].Split(',');
+                    if (variables.Length == 3 && variables[0] != "")
+                    {
+                        for (int i = 0; i < variables.Length && i < 5; i++)
+                        {
+                            if (double.TryParse(variables[i], out number))
+                            {
+                                if (graph.Series[i].Points.Count > graph_scaler)
+                                    graph.Series[i].Points.RemoveAt(0);
+                                graph.Series[i].Points.Add(number);
+                            }
+                        }
+                    }
+                }
+
+                graph.ResetAutoValues();
+            }));
         }
 
         /* Append text to rx_textarea*/
@@ -232,8 +251,8 @@ namespace Seriallab
             if (!send_data_flag)
             {
                 tx_repeater_delay.Interval = (int)send_delay.Value;
-                tx_repeater_delay.Start();       
-               
+                tx_repeater_delay.Start();
+
                 if (send_word_radiobutton.Checked)
                 {
                     progressBar1.Maximum = (int)send_repeat.Value;
@@ -270,11 +289,11 @@ namespace Seriallab
                 progressBar1.Visible = false;
                 tx_num_panel.Enabled = true;
                 tx_textarea.Enabled = true;
-                tx_radiobuttons_panel.Enabled = true;     
+                tx_radiobuttons_panel.Enabled = true;
                 sendData.Text = "Send";
                 if (write_form_file_radiobutton.Checked)
                     try { in_file.Dispose(); }
-                    catch { } 
+                    catch { }
             }
         }
 
@@ -299,7 +318,7 @@ namespace Seriallab
             {
                 try { tx_data = in_file.ReadLine(); }
                 catch { }
-                
+
                 if (tx_data == null)
                     send_data_flag = false;
                 else
@@ -316,9 +335,9 @@ namespace Seriallab
                 {
                     try
                     {
-                        
+
                         mySerial.Write(tx_data.Replace("\\n", Environment.NewLine));
-                        tx_terminal.AppendText("[TX]> " + tx_data+"\n");
+                        tx_terminal.AppendText("[TX]> " + tx_data + "\n");
                     }
                     catch
                     {
@@ -354,7 +373,7 @@ namespace Seriallab
                     tx_terminal.AppendText("[TX]> " + e.KeyChar.ToString() + "\n");
                     tx_textarea.Clear();
                 }
-                catch {alert("Can't write to "+mySerial.PortName+" port it might be opennd in another program"); }
+                catch { alert("Can't write to " + mySerial.PortName + " port it might be opennd in another program"); }
             }
         }
 
@@ -419,7 +438,7 @@ namespace Seriallab
                     graph_max.Value = (int)graph.ChartAreas[0].AxisY.Maximum;
                     graph.ChartAreas[0].AxisY.Maximum = (int)graph_max.Value;
                 }
-                catch {alert("Invalid Minimum value");}
+                catch { alert("Invalid Minimum value"); }
             else
                 graph.ChartAreas[0].AxisY.Maximum = Double.NaN;
 
@@ -471,14 +490,14 @@ namespace Seriallab
         /*serial port config*/
         private bool Serial_port_config()
         {
-            try {mySerial.PortName = portConfig.Text; }
-            catch { alert("There are no available ports"); return false;}
+            try { mySerial.PortName = portConfig.Text; }
+            catch { alert("There are no available ports"); return false; }
             mySerial.BaudRate = (Int32.Parse(baudrateConfig.Text));
             mySerial.StopBits = (StopBits)Enum.Parse(typeof(StopBits), (stopbitsConfig.SelectedIndex + 1).ToString(), true);
             mySerial.Parity = (Parity)Enum.Parse(typeof(Parity), parityConfig.SelectedIndex.ToString(), true);
             mySerial.DataBits = (Int32.Parse(databitsConfig.Text));
             mySerial.Handshake = (Handshake)Enum.Parse(typeof(Handshake), flowcontrolConfig.SelectedIndex.ToString(), true);
-
+            mySerial.ReadBufferSize = 65536;
             return true;
         }
 
@@ -542,7 +561,7 @@ namespace Seriallab
         private int file_size(string path)
         {
             var file = new StreamReader(path).ReadToEnd();
-            string [] lines = file.Split(new char[] { '\n' });
+            string[] lines = file.Split(new char[] { '\n' });
             int count = lines.Count();
             return count;
         }
@@ -552,7 +571,7 @@ namespace Seriallab
             tx_terminal.Clear();
         }
     }
-  }
+}
 
 
 

@@ -104,6 +104,7 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.tx_repeater_delay = new System.Windows.Forms.Timer(this.components);
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.alert_messege = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -971,6 +972,10 @@
             // 
             this.backgroundWorker1.WorkerSupportsCancellation = true;
             // 
+            // backgroundWorker2
+            // 
+            this.backgroundWorker2.WorkerSupportsCancellation = true;
+            // 
             // saveFileDialog1
             // 
             this.saveFileDialog1.DefaultExt = "png";
@@ -1080,6 +1085,7 @@
         private System.Windows.Forms.NumericUpDown graph_speed;
         private System.Windows.Forms.Timer tx_repeater_delay;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.ComponentModel.BackgroundWorker backgroundWorker2;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem clearToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip graph_menu;
